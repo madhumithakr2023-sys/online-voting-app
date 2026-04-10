@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SecureVote — Online Voting System</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #1a1a1a;
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        .header {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 18px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header .badge {
+            background: #534AB7;
+            color: #CECBF6;
+            font-size: 12px;
+            padding: 4px 14px;
+            border-radius: 20px;
+        }
+
+        /* ── Navigation ── */
+        .nav {
+            display: flex;
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .nav button {
+            padding: 14px 24px;
+            font-size: 14px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            color: #666;
+            font-family: inherit;
+            transition: color 0.2s;
+        }
+
+        .nav button.active {
+            color: #534AB7;
+            border-bottom-color: #534AB7;
+            font-weight: 600;
+        }
+
+        .nav button:hover {
+            color: #534AB7;
+        }
+
+        /* ── Pages ── */
+        .page {
+            padding: 28px 32px;
+            display: none;
+            max-width: 860px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .section-sub {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 22px;
+        }
+
+        /* ── Election info box ── */
+        .election-meta {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 22px;
+            font-size: 14px;
+        }
+
+        .election-meta .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .election-meta .row:last-child {
+            border-bottom: none;
+        }
+
+        .election-meta .key {
+            color: #888;
+        }
+
+        .status-open {
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        /* ── Form ── */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 7px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            max-width: 380px;
+            padding: 10px 14px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #fff;
+            color: #1a1a1a;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #534AB7;
+            box-shadow: 0 0 0 3px #EEEDFE;
+        }
+
+        /* ── Candidate cards ── */
+        .candidates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .candidate-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 18px 14px;
+            cursor: pointer;
+            text-align: center;
+            background: #fff;
+            transition: border-color 0.15s, background 0.15s, transform 0.1s;
+        }
+
+        .candidate-card:hover {
+            border-color: #534AB7;
+            background: #EEEDFE;
+            transform: translateY(-2px);
+        }
+
+        .candidate-card.selected {
+            border: 2px solid #534AB7;
+            background: #EEEDFE;
+        }
+
+        .avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0 auto 12px;
+        }
+
+        .candidate-card .cname {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .candidate-card .party {
+            font-size: 12px;
+            color: #777;
+        }
+
+        /* ── Buttons ── */
+        .btn-primary {
+            background: #534AB7;
+            color: #fff;
+            border: none;
+            padding: 11px 28px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #3C3489;
+        }
+
+        .btn-primary:disabled {
+            background: #bbb;
+            cursor: not-allowed;
+        }
+
+        /* ── Alerts ── */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 18px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .alert.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+            display: block;
+        }
+
+        .alert.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+            display: block;
+        }
+
+        .alert.info {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #90caf9;
+            display: block;
+        }
+
+        /* ── Results page ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 16px 18px;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .value {
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        .results-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #444;
+        }
+
+        .result-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .result-row .cname {
+            width: 140px;
+            font-size: 14px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .bar-wrap {
+            flex: 1;
+            background: #f0f0f0;
+            border-radius: 6px;
+            height: 20px;
+            overflow: hidden;
+        }
+
+        .bar {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.7s ease;
+            min-width: 4px;
+        }
+
+        .result-row .cnt {
+            width: 36px;
+            text-align: right;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .result-row .pct {
+            width: 44px;
+            text-align: right;
+            font-size: 13px;
+            color: #888;
+        }
+
+        .winner-badge {
+            font-size: 11px;
+            background: #534AB7;
+            color: #CECBF6;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        /* ── Voter log ── */
+        .voters-table {
+            width: 100%;
+            font-size: 14px;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+
+        .voters-table th {
+            text-align: left;
+            padding: 10px 14px;
+            background: #f7f7f7;
+            color: #666;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .voters-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f3f3f3;
+        }
+
+        .voters-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .pill {
+            display: inline-block;
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .pill.voted {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .pill.duplicate {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        /* ── Footer ── */
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #999;
+            background: #fff;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>SecureVote — Online Voting System</h1>
+        <span class="badge">Election 2025 — Open</span>
+    </div>
+
+    <div class="nav">
+        <button class="active" onclick="showPage('vote', this)">Cast Vote</button>
+        <button onclick="showPage('results', this)">Live Results</button>
+        <button onclick="showPage('admin', this)">Voter Log</button>
+    </div>
+
+    <!-- ── CAST VOTE PAGE ── -->
+    <div id="vote" class="page active">
+        <div class="section-title">Cast your vote</div>
+        <div class="section-sub">Enter your Voter ID, select a candidate, and click Submit. Each ID can only vote once.
+        </div>
+
+        <div class="election-meta">
+            <div class="row"><span class="key">Election name</span><span>General Election 2025</span></div>
+            <div class="row"><span class="key">Status</span><span class="status-open">Open for voting</span></div>
+            <div class="row"><span class="key">Registered voters</span><span>8</span></div>
+            <div class="row"><span class="key">Voting closes</span><span>31 December 2025, 18:00 IST</span></div>
+        </div>
+
+        <div id="vote-alert" class="alert"></div>
+
+        <div class="form-group">
+            <label for="voter-id">Voter ID</label>
+            <input type="text" id="voter-id" placeholder="e.g. V10042" maxlength="20" />
+        </div>
+
+        <div class="form-group">
+            <label>Select a candidate</label>
+        </div>
+
+        <div class="candidates-grid" id="candidates-grid"></div>
+
+        <button class="btn-primary" onclick="submitVote()">Submit vote</button>
+    </div>
+
+    <!-- ── RESULTS PAGE ── -->
+    <div id="results" class="page">
+        <div class="section-title">Live results</div>
+        <div class="section-sub">Vote counts update in real time as ballots are submitted.</div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">Total votes cast</div>
+                <div class="value" id="total-votes">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Registered voters</div>
+                <div class="value">8</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Voter turnout</div>
+                <div class="value" id="turnout">0%</div>
+            </div>
+        </div>
+
+        <div class="results-title">Candidate standings</div>
+        <div id="results-bars"></div>
+    </div>
+
+    <!-- ── VOTER LOG PAGE ── -->
+    <div id="admin" class="page">
+        <div class="section-title">Voter log</div>
+        <div class="section-sub">Duplicate vote attempts are automatically blocked and flagged here.</div>
+
+        <div id="voter-log-container">
+            <div class="empty-state" id="no-votes-msg">No votes have been cast yet.</div>
+            <table class="voters-table" id="voter-table" style="display:none">
+                <thead>
+                    <tr>
+                        <th>Voter ID</th>
+                        <th>Candidate voted for</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="voter-log"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>SecureVote — Online Voting System | CI/CD Demo Project | Jenkins + Docker + Kubernetes</footer>
+
+    <script>
+        const CANDIDATES = [
+            { id: 'A', name: 'Arjun Sharma', party: 'Progress Party', color: '#534AB7', bg: '#EEEDFE', initials: 'AS' },
+            { id: 'B', name: 'Priya Menon', party: 'Unity Alliance', color: '#0F6E56', bg: '#E1F5EE', initials: 'PM' },
+            { id: 'C', name: 'Ravi Kumar', party: 'National Front', color: '#993C1D', bg: '#FAECE7', initials: 'RK' },
+            { id: 'D', name: 'Anita Reddy', party: 'Reform India', color: '#185FA5', bg: '#E6F1FB', initials: 'AR' },
+        ];
+
+        const votes = { A: 0, B: 0, C: 0, D: 0 };
+        const votedUsers = {};
+        const voteLog = [];
+        let selectedId = null;
+
+        // Build candidate cards
+        const grid = document.getElementById('candidates-grid');
+        CANDIDATES.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'candidate-card';
+            div.id = 'card-' + c.id;
+            div.innerHTML = `
+      <div class="avatar" style="background:${c.bg};color:${c.color}">${c.initials}</div>
+      <div class="cname">${c.name}</div>
+      <div class="party">${c.party}</div>`;
+            div.onclick = () => selectCandidate(c.id);
+            grid.appendChild(div);
+        });
+
+        function selectCandidate(id) {
+            selectedId = id;
+            CANDIDATES.forEach(c => {
+                document.getElementById('card-' + c.id).className =
+                    'candidate-card' + (c.id === id ? ' selected' : '');
+            });
+        }
+
+        function showPage(id, btn) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+            if (id === 'results') renderResults();
+            if (id === 'admin') renderLog();
+        }
+
+        function showAlert(type, msg) {
+            const el = document.getElementById('vote-alert');
+            el.className = 'alert ' + type;
+            el.textContent = msg;
+            if (type !== 'error') {
+                setTimeout(() => { el.className = 'alert'; }, 4000);
+            }
+        }
+
+        function submitVote() {
+            const uid = document.getElementById('voter-id').value.trim();
+            if (!uid) {
+                showAlert('error', 'Please enter your Voter ID.');
+                return;
+            }
+            if (!selectedId) {
+                showAlert('error', 'Please select a candidate before submitting.');
+                return;
+            }
+            if (votedUsers[uid]) {
+                showAlert('error', 'Duplicate vote blocked — Voter ID "' + uid + '" has already voted.');
+                voteLog.push({ uid, candidate: '—', time: new Date().toLocaleTimeString(), status: 'duplicate' });
+                return;
+            }
+
+            // Record the vote
+            votes[selectedId]++;
+            votedUsers[uid] = true;
+            const c = CANDIDATES.find(x => x.id === selectedId);
+            voteLog.push({ uid, candidate: c.name, time: new Date().toLocaleTimeString(), status: 'voted' });
+
+            showAlert('success', 'Vote successfully cast for ' + c.name + '!');
+            document.getElementById('voter-id').value = '';
+            selectedId = null;
+            CANDIDATES.forEach(c2 => {
+                document.getElementById('card-' + c2.id).className = 'candidate-card';
+            });
+        }
+
+        function renderResults() {
+            const total = Object.values(votes).reduce((a, b) => a + b, 0);
+            document.getElementById('total-votes').textContent = total;
+            document.getElementById('turnout').textContent =
+                (total === 0 ? '0' : Math.round(total / 8 * 100)) + '%';
+
+            const sorted = [...CANDIDATES].sort((a, b) => votes[b.id] - votes[a.id]);
+            const leader = sorted[0];
+            const wrap = document.getElementById('results-bars');
+            wrap.innerHTML = '';
+
+            sorted.forEach((c, i) => {
+                const pct = total === 0 ? 0 : Math.round(votes[c.id] / total * 100);
+                const isLeading = votes[c.id] > 0 && i === 0;
+                const row = document.createElement('div');
+                row.className = 'result-row';
+                row.innerHTML = `
+        <div class="cname">
+          ${c.name.split(' ')[0]} ${c.name.split(' ')[1][0]}.
+          ${isLeading ? '<span class="winner-badge">Leading</span>' : ''}
+        </div>
+        <div class="bar-wrap">
+          <div class="bar" style="width:${pct}%;background:${c.color}"></div>
+        </div>
+        <div class="cnt">${votes[c.id]}</div>
+        <div class="pct">${pct}%</div>`;
+                wrap.appendChild(row);
+            });
+        }
+
+        function renderLog() {
+            const tbody = document.getElementById('voter-log');
+            const msg = document.getElementById('no-votes-msg');
+            const tbl = document.getElementById('voter-table');
+            tbody.innerHTML = '';
+
+            if (voteLog.length === 0) {
+                msg.style.display = 'block';
+                tbl.style.display = 'none';
+                return;
+            }
+            msg.style.display = 'none';
+            tbl.style.display = 'table';
+
+            [...voteLog].reverse().forEach(l => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+        <td><strong>${l.uid}</strong></td>
+        <td>${l.candidate}</td>
+        <td style="color:#999">${l.time}</td>
+        <td><span class="pill ${l.status}">${l.status === 'voted' ? 'Voted' : 'Duplicate — Blocked'}</span></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+
+</html>
